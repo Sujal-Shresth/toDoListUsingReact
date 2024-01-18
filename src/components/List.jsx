@@ -1,11 +1,15 @@
 import React, { Component } from "react";
 import "./listStyle.css";
-
+import ListItem from "./ListItem";
+import UpdateDiv from "./UpdateDiv";
+import Background from "./Background";
 export class List extends Component {
   constructor() {
     super();
 
     this.state = {
+      display: "none",
+      keyvalue: null,
       taskList: [],
       inputValue: "",
       list: [],
@@ -16,6 +20,7 @@ export class List extends Component {
     this.handleInputChange = this.handleInputChange.bind(this);
     this.markDone = this.markDone.bind(this);
     this.removeTasks = this.removeTasks.bind(this);
+    this.initiateUpdate = this.initiateUpdate.bind(this);
     this.updateTask = this.updateTask.bind(this);
   }
 
@@ -38,6 +43,7 @@ export class List extends Component {
           };
 
           return {
+            display: "none",
             taskList: [...prevState.taskList, newTask],
             inputValue: "",
           };
@@ -49,21 +55,21 @@ export class List extends Component {
     }
   }
 
-  updateTask(e) {
-    let taskKey = e.target.getAttribute("keyvalue");
+  updateTask() {
+    let taskKey = this.state.keyvalue;
     let index;
-    let newTask = prompt("Enter updated task");
+    let newTask = this.state.inputValue;
     if (newTask != "") {
       this.state.taskList.forEach((task, i) => {
         if (task.key == taskKey) {
           index = i;
         }
       });
-
-      console.log(index);
       this.setState(
         (prevState) => {
           this.state.taskList[index].description = newTask;
+          this.state.inputValue = "";
+          this.state.display = "none";
         },
         () => {
           this.updateList();
@@ -78,27 +84,12 @@ export class List extends Component {
       let currentList = this.state.taskList;
       let newList = currentList.map((task) => {
         return (
-          <div className="taskDiv" key={task.key}>
-            <div className="task">
-              <p className={task.selection}>{task.description}</p>
-              <div className="changeButtons">
-                <button
-                  className="change completed"
-                  onClick={this.markDone}
-                  keyvalue={task.key}
-                >
-                  &#x2713;
-                </button>
-                <button
-                  className="change update"
-                  onClick={this.updateTask}
-                  keyvalue={task.key}
-                >
-                  U
-                </button>
-              </div>
-            </div>
-          </div>
+          <ListItem
+            key={task.key}
+            task={task}
+            markdone={this.markDone}
+            initiateUpdate={this.initiateUpdate}
+          />
         );
       });
       return {
@@ -109,9 +100,7 @@ export class List extends Component {
 
   // method to mark done tasks
   markDone(e) {
-    console.log(e.target.getAttribute("keyvalue"));
     let taskKey = e.target.getAttribute("keyvalue");
-    // console.log(prevState.taskList);
     let newList = this.state.taskList.map((task) => {
       if (task.key == taskKey) {
         if (task.selection === "notDone") task.selection = "selected";
@@ -119,7 +108,6 @@ export class List extends Component {
         return task;
       } else return task;
     });
-    console.log(newList);
     this.setState(
       (prevState) => {
         return {
@@ -149,12 +137,27 @@ export class List extends Component {
     );
   }
 
-  initiateUpdate() {}
+  initiateUpdate(e) {
+    this.setState((prevState) => {
+      return {
+        display: "flex",
+        keyvalue: e.target.getAttribute("keyvalue"),
+      };
+    });
+  }
 
   render() {
     return (
       // The container
       <div id="container">
+        <Background display={this.state.display} />
+        <UpdateDiv
+          display={this.state.display}
+          handleinputchange={this.handleInputChange}
+          updateTask={this.updateTask}
+          indx={this.state.indx}
+          value={this.state.inputValue}
+        />
         <div id="inputDiv">
           <input
             type="text"
@@ -166,7 +169,7 @@ export class List extends Component {
             ref={this.inputRef}
           />
 
-          <button id="addButton" onClick={this.takeInput}>
+          <button className="addButton" onClick={this.takeInput}>
             Add
           </button>
         </div>
